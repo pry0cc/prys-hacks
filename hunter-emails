@@ -1,0 +1,7 @@
+#!/bin/bash
+
+source "$HOME/.jlib/lib/jlib.sh"
+token="$(get_opt "hunter")"
+domain="$1"
+
+curl -s "https://api.hunter.io/v2/domain-search?domain=$domain&api_key=$token" | jq -r '.data.emails[].value'
