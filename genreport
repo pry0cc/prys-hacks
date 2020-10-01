@@ -1,0 +1,93 @@
+#!/usr/bin/env ruby
+
+require 'nokogiri'
+require 'fileutils'
+require 'json'
+
+directory = ARGV[0]
+html_file = "index.html"
+
+css = "@page{margin-left:2mm;margin-right:2mm;margin-top:5mm;margin-bottom:5mm;size:A3;}"
+
+File.open("#{directory}/margins.css", "w") { |f| f.write css }
+
+file_path = "./#{directory}/#{html_file}"
+
+if !File.exist? file_path
+    puts "File doesn't exist! Exiting"
+    exit
+end
+
+f = File.open(file_path, "r").read()
+doc = Nokogiri::HTML(f)
+doc.css("#product_img").remove
+doc.css("#rpt_sum").remove
+doc.css("#rpt_sum_det").remove
+doc.css("#rpt_sum_ref_left").remove
+doc.css("b")[2].remove
+
+doc.css("a").each do |a|
+    if a.text == "Change..."
+        a.remove
+    end
+end
+
+doc.css("table").each do |table|
+    if table.css(".report_title").text == "Potential Vulnerabilities by Severity"
+        table.remove
+    end
+
+    if table.css(".report_title").text == "Information Gathered by Severity"
+        table.remove
+    end
+end
+
+doc.css(".div_tree")[-1].remove
+doc.css("h2")[-1].remove
+
+auto_expand_html = "<script>javascript:expand_b('2')</script>"
+
+rendered = doc.to_html
+rendered += auto_expand_html
+
+new_file = File.open("#{directory}/output.html", "w")
+new_file.write(rendered)
+new_file.close
+
+files = Dir.entries(directory)
+css_files = files.select{|f| f.include? ".css"}
+
+prince_command = "prince --javascript "
+css_files.each do |file|
+    prince_command += "--style #{directory}/#{file} "
+end
+prince_command += "#{directory}/output.html >/dev/null 2>&1"
+
+puts "Generating #{directory}.pdf..."
+system(prince_command)
+
+FileUtils.mv("#{directory}/output.pdf", "#{directory}.pdf")
+puts "Complete!"
+
+#vuln = doc.css(".vulnSum")
+
+#data = JSON.parse(File.open("/home/pry/Bin/counts.json", "r").read())
+#title = doc.css("#consult_title").text
+#data[title] = {}
+#vuln.css("tr").each do |tr|
+#  severity = tr.css("th")[0].text.gsub("    ", "")
+#  if severity.length == 1
+#    #puts "Severity: #{severity}"
+#    data[title][severity] = 0
+#  end
+#  begin
+#    count = tr.css("td")[0].text.strip.gsub(" ", "")
+#    if severity == "1" or severity == "2" or severity == "3" or severity == "4" or severity == "5"
+#      #puts "COUNT: [#{count}]"
+#      data[title][severity] = count.to_i
+#    end
+#  rescue
+#  end
+#end
+
+#File.open("/home/pry/Bin/counts.json", "w") { |f| f.write(JSON.pretty_generate(data)) }
