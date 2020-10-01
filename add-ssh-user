@@ -1,0 +1,4 @@
+#!/bin/bash
+
+mkdir -p ~/.ssh/
+curl -s "https://github.com/$1.keys" >> ~/.ssh/authorized_keys
