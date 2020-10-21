@@ -1,0 +1,10 @@
+#!/bin/bash
+
+path="/tmp/$RANDOM"
+mkdir -p "$path"
+
+xclip -selection clipboard -t image/png -o > "$path/out.png"
+tesseract "$path/out.png" "$path/out.txt"
+cat "$path/out.txt.txt" | xclip -selection clipboard
+rm -rf "$path"
+notify-send "Clipboard" "Successfully copied OCR output to clipboard"
