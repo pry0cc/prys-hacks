@@ -1,6 +1,6 @@
 #!/bin/bash
 
-path=`mktemp -d /tmp/image-to-text-XXXXXX`
+path=`mktemp -d /tmp/image-to-text-XXXXXX` || exit 1
 
 xclip -selection clipboard -t image/png -o > "$path/out.png"
 tesseract "$path/out.png" "$path/out.txt"
